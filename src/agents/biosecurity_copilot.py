@@ -7,13 +7,17 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TypedDict
 
 import numpy as np
 from langgraph.graph import END, StateGraph
+from pypdf import PdfReader
 from rank_bm25 import BM25Okapi
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
+DEFAULT_REGULATORY_DOCS_DIR = Path("data/regulatory_docs")
 
 
 @dataclass(frozen=True)
@@ -258,6 +262,110 @@ def lookup_hs_btom_tier(hs_code: str | None) -> dict[str, str] | None:
     }
 
 
+def _infer_risk_scope(text: str) -> str:
+    match = re.search(r"Risk\s+Scope:\s*(High|Medium|Low)", text, re.IGNORECASE)
+    if match:
+        return match.group(1).capitalize()
+    lower = text.lower()
+    if "high-risk" in lower or "high risk" in lower or "prohibited" in lower:
+        return "High"
+    if "low-risk" in lower or "low risk" in lower:
+        return "Low"
+    return "Medium"
+
+
+def _parse_markdown_or_text(path: Path) -> list[RegulatoryDocument]:
+    content = path.read_text(encoding="utf-8", errors="ignore").strip()
+    if not content:
+        return []
+
+    section_pattern = re.compile(r"^##\s+\[([A-Z0-9-]+)\]\s+(.+)$", re.MULTILINE)
+    matches = list(section_pattern.finditer(content))
+    if matches:
+        docs: list[RegulatoryDocument] = []
+        for idx, m in enumerate(matches):
+            doc_id = m.group(1).strip()
+            title = m.group(2).strip()
+            start = m.end()
+            end = matches[idx + 1].start() if idx + 1 < len(matches) else len(content)
+            block = content[start:end].strip()
+            source_match = re.search(r"^Source:\s*(.+)$", block, re.MULTILINE)
+            source = source_match.group(1).strip() if source_match else path.name
+            risk_scope = _infer_risk_scope(block)
+            body_lines = [
+                line
+                for line in block.splitlines()
+                if not re.match(r"^(Source|Risk\s+Scope):", line.strip(), re.IGNORECASE)
+            ]
+            body_text = " ".join(line.strip() for line in body_lines if line.strip())
+            if body_text:
+                docs.append(
+                    RegulatoryDocument(
+                        doc_id=doc_id,
+                        title=title,
+                        source=source,
+                        risk_scope=risk_scope,
+                        text=body_text,
+                    )
+                )
+        if docs:
+            return docs
+
+    stem_id = re.sub(r"[^A-Z0-9]+", "-", path.stem.upper()).strip("-") or "REG-DOC"
+    first_line = next((ln.lstrip("# ").strip() for ln in content.splitlines() if ln.strip()), path.stem)
+    return [
+        RegulatoryDocument(
+            doc_id=f"{stem_id}-01",
+            title=first_line,
+            source=path.name,
+            risk_scope=_infer_risk_scope(content),
+            text=" ".join(content.split()),
+        )
+    ]
+
+
+def _parse_pdf_document(path: Path) -> list[RegulatoryDocument]:
+    reader = PdfReader(str(path))
+    pages_text = [(page.extract_text() or "").strip() for page in reader.pages]
+    full_text = " ".join(p for p in pages_text if p)
+    if not full_text:
+        return []
+    stem_id = re.sub(r"[^A-Z0-9]+", "-", path.stem.upper()).strip("-") or "PDF-DOC"
+    id_match = re.search(r"\[([A-Z0-9-]+)\]", full_text)
+    doc_id = id_match.group(1) if id_match else f"PDF-{stem_id}-01"
+    return [
+        RegulatoryDocument(
+            doc_id=doc_id,
+            title=f"{path.stem.replace('_', ' ').title()} (Statutory PDF)",
+            source=path.name,
+            risk_scope=_infer_risk_scope(full_text),
+            text=" ".join(full_text.split()),
+        )
+    ]
+
+
+def load_btom_regulatory_corpus(
+    docs_dir: Path = DEFAULT_REGULATORY_DOCS_DIR,
+) -> tuple[RegulatoryDocument, ...]:
+    """Parse .pdf (pypdf), .md, and .txt Defra BTOM, IPAFFS, Phytosanitary,
+    and FSA Food Law documents from disk, falling back to REGULATORY_CORPUS if empty.
+    """
+    if not docs_dir.exists() or not docs_dir.is_dir():
+        return REGULATORY_CORPUS
+
+    parsed: list[RegulatoryDocument] = []
+    for file_path in sorted(docs_dir.iterdir()):
+        if not file_path.is_file():
+            continue
+        suffix = file_path.suffix.lower()
+        if suffix in {".md", ".txt"}:
+            parsed.extend(_parse_markdown_or_text(file_path))
+        elif suffix == ".pdf":
+            parsed.extend(_parse_pdf_document(file_path))
+
+    return tuple(parsed) if parsed else REGULATORY_CORPUS
+
+
 def _tokenize(text: str) -> list[str]:
     return re.findall(r"[a-z0-9]+", text.lower())
 
@@ -265,13 +373,17 @@ def _tokenize(text: str) -> list[str]:
 class HybridRegulatoryRetriever:
     """Hybrid BM25Okapi + TF-IDF cosine retriever over UK biosecurity & FSA texts."""
 
-    def __init__(self, docs: tuple[RegulatoryDocument, ...] = REGULATORY_CORPUS) -> None:
-        self.docs = docs
-        tokenized_corpus = [_tokenize(f"{d.title} {d.source} {d.text}") for d in docs]
+    def __init__(
+        self,
+        docs: tuple[RegulatoryDocument, ...] | None = None,
+        docs_dir: Path = DEFAULT_REGULATORY_DOCS_DIR,
+    ) -> None:
+        self.docs = docs if docs is not None else load_btom_regulatory_corpus(docs_dir=docs_dir)
+        tokenized_corpus = [_tokenize(f"{d.title} {d.source} {d.text}") for d in self.docs]
         self.bm25 = BM25Okapi(tokenized_corpus)
         self.tfidf = TfidfVectorizer(ngram_range=(1, 2), stop_words="english")
         self.tfidf_matrix = self.tfidf.fit_transform(
-            [f"{d.title} {d.source} {d.text}" for d in docs]
+            [f"{d.title} {d.source} {d.text}" for d in self.docs]
         )
 
     def retrieve(self, query: str, top_k: int = 3) -> list[dict[str, object]]:
@@ -338,8 +450,13 @@ class BiosecurityCopilot:
     citation-verifier judge node, and deterministic HS-code fallback.
     """
 
-    def __init__(self, min_retrieval_score: float = 0.25) -> None:
-        self.retriever = HybridRegulatoryRetriever()
+    def __init__(
+        self,
+        min_retrieval_score: float = 0.25,
+        docs_dir: Path = DEFAULT_REGULATORY_DOCS_DIR,
+    ) -> None:
+        self.docs_dir = docs_dir
+        self.retriever = HybridRegulatoryRetriever(docs_dir=docs_dir)
         self.min_retrieval_score = min_retrieval_score
         self.graph = self._compile_graph()
 
@@ -407,11 +524,12 @@ class BiosecurityCopilot:
 
         parts: list[str] = []
         if hs_lookup:
+            hs_cite = hs_lookup["doc_id"] if hs_lookup["doc_id"] in citations else str(top_doc["doc_id"])
             parts.append(
                 f"HS {hs_lookup['hs_code']} ({hs_lookup['commodity']}) is classified as "
                 f"**{hs_lookup['btom_risk_tier']} BTOM SPS Risk** ({hs_lookup['ched_type']}, "
                 f"IPAFFS: {hs_lookup['ipaffs_required']}, Certificate: {hs_lookup['certificate_required']}) "
-                f"[{hs_lookup['doc_id']}]."
+                f"[{hs_cite}]."
             )
 
         for doc in docs[:2]:

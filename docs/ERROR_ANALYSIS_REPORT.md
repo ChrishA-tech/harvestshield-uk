@@ -6,19 +6,19 @@ This report audits **HarvestShield UK** forecasting reliability across UK agro-e
 slices, extreme waterlogging anomalies, high-risk Defra Border Target Operating Model (BTOM)
 import corridors, and Sentinel-2 partial cloud regimes.
 
-- **Horizon t+3m Conformal Yield Deviation**: MAE = `1.549` pp, 90% Coverage = `0.989`
-- **UK Port Clearance Delay Risk**: MAE = `4.781` hours
-- **Weather-Only Fallback (`cloud_cover_pct > 80%`) t+1m MAE**: `1.213` pp
+- **Horizon t+3m Conformal Yield Deviation**: MAE = `1.477` pp, 90% Coverage = `0.986`
+- **UK Port Clearance Delay Risk**: MAE = `6.935` hours
+- **Weather-Only Fallback (`cloud_cover_pct > 80%`) t+1m MAE**: `1.183` pp
 
 ## 2. Regional & Domain Slice Audit (t+1m Yield Deviation & 90% Conformal Coverage)
 
 | Slice                         |   Samples |   MAE (pp) |   RMSE (pp) |   90% Conformal Coverage |   Mean Width (pp) |
 |:------------------------------|----------:|-----------:|------------:|-------------------------:|------------------:|
-| Overall (All UK Regions)      |       349 |      1.065 |       1.344 |                    0.997 |             7.089 |
-| Arable Eastern Lowlands       |       175 |      1.005 |       1.282 |                    0.994 |             7.045 |
-| Pastoral Western Uplands      |       174 |      1.126 |       1.403 |                    1     |             7.133 |
-| Extreme Wet Winter Anomaly    |        56 |      0.935 |       1.199 |                    1     |             7.154 |
-| High-Risk SPS Import Corridor |       258 |      1.109 |       1.4   |                    0.996 |             7.092 |
+| Overall (All UK Regions)      |       349 |      1.022 |       1.298 |                    0.994 |             6.627 |
+| Arable Eastern Lowlands       |       175 |      0.997 |       1.273 |                    1     |             6.618 |
+| Pastoral Western Uplands      |       174 |      1.046 |       1.322 |                    0.989 |             6.636 |
+| Extreme Wet Winter Anomaly    |        44 |      0.92  |       1.242 |                    0.977 |             6.756 |
+| High-Risk SPS Import Corridor |       256 |      1.069 |       1.357 |                    0.992 |             6.626 |
 
 ### Key Observations
 - **Arable Eastern Lowlands** (East Anglia, Lincolnshire, Yorkshire) exhibit tight conformal

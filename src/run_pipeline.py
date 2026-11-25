@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 
 import numpy as np
@@ -24,8 +25,10 @@ from src.ingestion.agri_trade_pipeline import (
     DEFAULT_DUCKDB_PATH,
     DEFAULT_QUARANTINE_PATH,
     FARMING_REGION_TO_ITL1,
+    persist_to_duckdb,
     run_agri_trade_ingestion,
 )
+from src.ingestion.live_agri_connectors import fetch_live_uk_fsa_and_agri_weather
 from src.models.yield_and_satellite import (
     DEFAULT_MLFLOW_URI,
     train_conformal_yield_and_delay_models,
@@ -175,24 +178,37 @@ def generate_uk_synthetic_dataset(
     return df
 
 
-def run_end_to_end_pipeline() -> dict[str, object]:
+def run_end_to_end_pipeline(live: bool = True) -> dict[str, object]:
     """Execute the full HarvestShield UK data, econometrics, ML, evaluation, and copilot pipeline."""
-    raw_df = generate_uk_synthetic_dataset(n_rows=360, corrupt_rate=0.03, seed=42)
-    DEFAULT_RAW_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
-    raw_df.to_parquet(DEFAULT_RAW_DATA_PATH, index=False)
+    if live:
+        clean_df = fetch_live_uk_fsa_and_agri_weather(
+            duckdb_path=DEFAULT_DUCKDB_PATH,
+            quarantine_path=DEFAULT_QUARANTINE_PATH,
+        )
+        total_rows = int(clean_df.attrs.get("total_rows", len(clean_df)))
+        clean_rows = int(clean_df.attrs.get("clean_rows", len(clean_df)))
+        quarantined_rows = int(clean_df.attrs.get("quarantined_rows", 0))
+        feed_status = str(clean_df.attrs.get("feed_status", "LIVE_FSA_OPENMETEO"))
+    else:
+        raw_df = generate_uk_synthetic_dataset(n_rows=360, corrupt_rate=0.03, seed=42)
+        DEFAULT_RAW_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
+        raw_df.to_parquet(DEFAULT_RAW_DATA_PATH, index=False)
 
-    ingestion_res = run_agri_trade_ingestion(
-        raw_df,
-        duckdb_path=DEFAULT_DUCKDB_PATH,
-        quarantine_path=DEFAULT_QUARANTINE_PATH,
-    )
+        ingestion_res = run_agri_trade_ingestion(
+            raw_df,
+            duckdb_path=DEFAULT_DUCKDB_PATH,
+            quarantine_path=DEFAULT_QUARANTINE_PATH,
+        )
+        clean_df = ingestion_res.clean_df
+        total_rows = ingestion_res.total_rows
+        clean_rows = ingestion_res.clean_rows
+        quarantined_rows = ingestion_res.quarantined_rows
+        feed_status = "OFFLINE_SYNTHETIC"
 
-    enriched_df = compute_spei_waterlogging_anomalies(ingestion_res.clean_df)
+    enriched_df = compute_spei_waterlogging_anomalies(clean_df)
     causal_res = estimate_supply_shock_t_learner(enriched_df)
 
     # Persist econometrics-enriched clean dataset back to DuckDB for API & dashboard consumers
-    from src.ingestion.agri_trade_pipeline import persist_to_duckdb
-
     persist_to_duckdb(causal_res.enriched_df, duckdb_path=DEFAULT_DUCKDB_PATH)
 
     conformal_bundle = train_conformal_yield_and_delay_models(
@@ -218,9 +234,10 @@ def run_end_to_end_pipeline() -> dict[str, object]:
     )
 
     return {
-        "total_rows": ingestion_res.total_rows,
-        "clean_rows": ingestion_res.clean_rows,
-        "quarantined_rows": ingestion_res.quarantined_rows,
+        "feed_status": feed_status,
+        "total_rows": total_rows,
+        "clean_rows": clean_rows,
+        "quarantined_rows": quarantined_rows,
         "ate_import_uplift_tonnes": round(causal_res.ate_import_uplift_tonnes, 2),
         "wholesale_price_elasticity": round(causal_res.wholesale_price_elasticity, 3),
         "t1m_coverage_90": round(conformal_bundle.metrics["t1m_coverage_90"], 3),
@@ -231,8 +248,21 @@ def run_end_to_end_pipeline() -> dict[str, object]:
     }
 
 
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse CLI options for HarvestShield UK pipeline execution."""
+    parser = argparse.ArgumentParser(description="Run the HarvestShield UK end-to-end pipeline.")
+    parser.add_argument(
+        "--live",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Fetch live FSA Food Alerts and Open-Meteo UK agro-meteorological feeds (default: --live).",
+    )
+    return parser.parse_args(argv)
+
+
 if __name__ == "__main__":
-    summary = run_end_to_end_pipeline()
+    args = parse_args()
+    summary = run_end_to_end_pipeline(live=args.live)
     print("HarvestShield UK pipeline complete:")
     for key, val in summary.items():
         print(f"  {key}: {val}")
