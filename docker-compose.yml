@@ -1,0 +1,60 @@
+services:
+  pgvector:
+    image: pgvector/pgvector:pg16
+    container_name: harvestshield-pgvector
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-harvestshield}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-harvestshield_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-harvestshield}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U harvestshield"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.16.2
+    container_name: harvestshield-mlflow
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:////mlruns/mlflow.db
+      --default-artifact-root /mlruns/artifacts
+      --host 0.0.0.0
+      --port 5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlruns
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:5000/health\")' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: harvestshield-api
+    environment:
+      HARVESTSHIELD_HMAC_KEY: ${HARVESTSHIELD_HMAC_KEY:-uk-defra-harvestshield-dev-salt}
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      DATABASE_URL: postgresql://harvestshield:harvestshield_dev@pgvector:5432/harvestshield
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./mlruns:/app/mlruns
+      - ./docs:/app/docs
+    depends_on:
+      pgvector:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+
+volumes:
+  pgvector_data:
