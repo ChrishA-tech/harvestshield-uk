@@ -1,0 +1,42 @@
+{
+  "source": "FAOSTAT via Our World in Data, UK wheat yield",
+  "metric": "MAE in tonnes/ha",
+  "baseline": "Yield two years earlier",
+  "candidate": "Median of five years through t-2",
+  "holdout": [
+    2005,
+    2024
+  ],
+  "metrics": {
+    "cases": 20,
+    "baseline_loss": 0.75733,
+    "candidate_loss": 0.522835,
+    "candidate_wins": 12,
+    "baseline_wins": 4,
+    "ties": 4,
+    "largest_candidate_disadvantage": 0.525,
+    "worst_case": "2020"
+  },
+  "by_period": {
+    "2005\u20132014": {
+      "cases": 10,
+      "baseline_loss": 0.6218,
+      "candidate_loss": 0.42889,
+      "candidate_wins": 6,
+      "baseline_wins": 3,
+      "ties": 1,
+      "largest_candidate_disadvantage": 0.2538,
+      "worst_case": "2012"
+    },
+    "2015\u20132024": {
+      "cases": 10,
+      "baseline_loss": 0.89286,
+      "candidate_loss": 0.61678,
+      "candidate_wins": 6,
+      "baseline_wins": 1,
+      "ties": 3,
+      "largest_candidate_disadvantage": 0.525,
+      "worst_case": "2020"
+    }
+  }
+}

@@ -36,3 +36,7 @@ For cost replay, put the realised policy costs in baseline and candidate, and a 
 ```sh
 python replay/replay.py --input archive.csv --source "Archive name and holdout period" --output report.json
 ```
+
+## Observed-outcome benchmark
+
+See the [measured benchmark](OBSERVED_BACKTEST.md) for public observations, evaluation rules and results. The interactive synthetic scenarios are separate.
