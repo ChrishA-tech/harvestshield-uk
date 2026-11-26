@@ -1,0 +1,16 @@
+{
+  "slug": "harvestshield-uk",
+  "name": "HarvestShield UK",
+  "domain": "Crop monitoring",
+  "subtitle": "Compare weather-only estimates with canopy-adjusted crop predictions.",
+  "units": "Tonnes/ha absolute error",
+  "baseline": "Weather only",
+  "candidate": "Weather + canopy",
+  "stress": "Weather stress",
+  "groups": [
+    "Eastern",
+    "Midlands",
+    "Northern"
+  ],
+  "note": "Canopy and yield values are simulated. When the feed is degraded the candidate uses weather only. Satellite vision accuracy requires independent field labels and farm- and season-held-out evaluation."
+}

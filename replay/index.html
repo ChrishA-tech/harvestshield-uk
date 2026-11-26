@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UK Decision Replay | Chrish Pep Felix A</title>
+<style>
+:root{color-scheme:light dark;font:16px/1.5 system-ui,sans-serif;--surface:#fff;--ink:#142239;--sub:#4f5f74;--bg:#eef3fa;--line:#d8e2ef;--blue:#075ec9;--candidate:#0669cc;--base:#77879c}
+@media(prefers-color-scheme:dark){:root{--surface:#152134;--ink:#f2f6ff;--sub:#b1c1d6;--bg:#0d1524;--line:#344761;--blue:#9bc7ff;--candidate:#69b4ff;--base:#a3b0c0}}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:var(--bg)}main,nav{max-width:1152px;margin:auto;padding:0 26px}nav{display:flex;justify-content:space-between;align-items:center;gap:20px;padding-block:22px}a{color:var(--blue);text-underline-offset:4px}h1,h2,p{margin:0}h1{font-size:clamp(3.1rem,8vw,6.7rem);line-height:1;letter-spacing:-.075em;margin:.2em 0}h2{font-size:1.32rem;letter-spacing:-.02em}.lead{font-size:1.2rem;max-width:38rem;color:var(--sub)}.hero{padding:48px 0 35px;border-top:1px solid var(--line)}.domain{color:var(--blue);font-weight:700}.panel{padding:22px;background:var(--surface);border:1px solid var(--line);border-radius:24px;box-shadow:0 10px 30px #182a4510}.filters,.scores{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}.scores strong{display:block;font-size:2.1rem;letter-spacing:-.04em}.muted,.panel p{color:var(--sub)}.panel p{margin-top:6px}label{display:grid;gap:5px;font-weight:650}select,button{width:100%;font:inherit;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);padding:10px 12px}button{width:auto;cursor:pointer}button:disabled{opacity:.5;cursor:default}button:hover:not(:disabled){border-color:var(--blue)}.chart{padding-bottom:14px}.chart canvas{width:100%;height:255px;display:block;margin-top:12px}.legend{display:flex;gap:18px;font-weight:650;flex-wrap:wrap}.legend span::before{content:'';display:inline-block;width:.8rem;height:.5rem;border-radius:4px;background:var(--base);margin-right:7px}.legend span+span::before{background:var(--candidate)}.details{margin:16px 0 44px}.details table{width:100%;border-collapse:collapse;text-align:left;margin-top:12px}td,th{padding:9px;border-bottom:1px solid var(--line)}.scroll{overflow:auto}.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.scope{border-left:3px solid var(--blue);padding-left:12px;margin:14px 0}.state{margin-top:12px}.hidden{display:none}@media(max-width:670px){main,nav{padding-inline:16px}.filters{grid-template-columns:1fr}.scores{gap:6px}.scores .panel{padding:10px}.scores strong{font-size:1.5rem}.hero{padding-block:32px}.chart canvas{height:210px}}
+</style>
+</head>
+<body>
+<nav><a href="https://chrisha-tech.github.io/">Chrish Pep Felix A</a><a id="repo" href="https://github.com/ChrishA-tech">GitHub repository</a></nav>
+<main>
+<header class="hero"><p class="domain" id="domain">Interactive portfolio</p><h1 id="title">UK Decision Replay</h1><p id="subtitle" class="lead"></p></header>
+<p id="failure" role="alert" class="panel hidden"></p>
+<div id="interactive" class="hidden">
+<div class="filters panel">
+<label>Project<select id="project"></select></label>
+<label>Region or group<select id="group"></select></label>
+<label>Scenario<select id="scenario"></select></label>
+</div>
+<p id="scope" class="scope"></p>
+<section class="scores" aria-label="Results" aria-live="polite">
+<div class="panel"><span id="base-label"></span><strong id="baseline"></strong><span class="muted" id="units"></span></div>
+<div class="panel"><span id="candidate-label"></span><strong id="candidate"></strong><span class="muted">Lower is better</span></div>
+<div class="panel"><span>Candidate wins</span><strong id="wins"></strong><span class="muted" id="count"></span></div>
+</section>
+<section class="panel chart">
+<div class="row"><h2>Replay by case</h2><button id="download" type="button">Export visible cases</button></div>
+<canvas id="chart" role="img" aria-label="Baseline and candidate scores by replay case. Values are available in the table."></canvas>
+<div class="legend"><span id="base-legend"></span><span id="candidate-legend"></span></div>
+<p class="state" id="status" aria-live="polite"></p>
+</section>
+<section class="panel details">
+<h2>Where the candidate struggled</h2>
+<p id="analysis"></p>
+<div class="scroll"><table><thead><tr><th scope="col">Case</th><th scope="col">Group</th><th scope="col">Scenario</th><th scope="col">Baseline</th><th scope="col">Candidate</th></tr></thead><tbody id="cases"></tbody></table></div>
+</section>
+</div>
+<noscript><p class="panel">Enable JavaScript to explore the replay. The source and benchmark documentation are available on GitHub.</p></noscript>
+</main>
+<script id="data" type="application/json">[{"config": {"slug": "harvestshield-uk", "name": "HarvestShield UK", "domain": "Crop monitoring", "subtitle": "Compare weather-only estimates with canopy-adjusted crop predictions.", "units": "Tonnes/ha absolute error", "baseline": "Weather only", "candidate": "Weather + canopy", "stress": "Weather stress", "groups": ["Eastern", "Midlands", "Northern"], "note": "Canopy and yield values are simulated. When the feed is degraded the candidate uses weather only. Satellite vision accuracy requires independent field labels and farm- and season-held-out evaluation."}, "provenance": "Deterministic synthetic scenarios", "cases": [{"period": 1, "group": "Eastern", "scenario": "Typical", "baseline": 0.41448, "candidate": 0.04031}, {"period": 2, "group": "Midlands", "scenario": "Typical", "baseline": 0.91393, "candidate": 0.49115}, {"period": 3, "group": "Northern", "scenario": "Typical", "baseline": 0.97859, "candidate": 0.27745}, {"period": 4, "group": "Eastern", "scenario": "Weather stress", "baseline": 0.4711, "candidate": 0.22311}, {"period": 5, "group": "Midlands", "scenario": "Weather stress", "baseline": 0.14994, "candidate": 0.28895}, {"period": 6, "group": "Northern", "scenario": "Weather stress", "baseline": 1.31484, "candidate": 0.59389}, {"period": 7, "group": "Eastern", "scenario": "Feed degraded", "baseline": 0.20322, "candidate": 0.20322}, {"period": 8, "group": "Midlands", "scenario": "Feed degraded", "baseline": 1.13561, "candidate": 1.13561}, {"period": 9, "group": "Northern", "scenario": "Feed degraded", "baseline": 1.41568, "candidate": 1.41568}, {"period": 10, "group": "Eastern", "scenario": "Typical", "baseline": 0.24011, "candidate": 0.17354}, {"period": 11, "group": "Midlands", "scenario": "Typical", "baseline": 0.38833, "candidate": 0.30961}, {"period": 12, "group": "Northern", "scenario": "Typical", "baseline": 0.58963, "candidate": 0.10623}, {"period": 13, "group": "Eastern", "scenario": "Weather stress", "baseline": 0.01478, "candidate": 0.10233}, {"period": 14, "group": "Midlands", "scenario": "Weather stress", "baseline": 0.6244, "candidate": 0.24273}, {"period": 15, "group": "Northern", "scenario": "Weather stress", "baseline": 0.55619, "candidate": 0.37918}, {"period": 16, "group": "Eastern", "scenario": "Feed degraded", "baseline": 0.59626, "candidate": 0.59626}, {"period": 17, "group": "Midlands", "scenario": "Feed degraded", "baseline": 0.69953, "candidate": 0.69953}, {"period": 18, "group": "Northern", "scenario": "Feed degraded", "baseline": 0.59681, "candidate": 0.59681}, {"period": 19, "group": "Eastern", "scenario": "Typical", "baseline": 0.88143, "candidate": 0.25503}, {"period": 20, "group": "Midlands", "scenario": "Typical", "baseline": 0.7553, "candidate": 0.07871}, {"period": 21, "group": "Northern", "scenario": "Typical", "baseline": 0.28611, "candidate": 0.16135}, {"period": 22, "group": "Eastern", "scenario": "Weather stress", "baseline": 0.71661, "candidate": 0.07667}, {"period": 23, "group": "Midlands", "scenario": "Weather stress", "baseline": 0.42434, "candidate": 0.27841}, {"period": 24, "group": "Northern", "scenario": "Weather stress", "baseline": 1.06509, "candidate": 0.64372}, {"period": 25, "group": "Eastern", "scenario": "Feed degraded", "baseline": 0.14873, "candidate": 0.14873}, {"period": 26, "group": "Midlands", "scenario": "Feed degraded", "baseline": 0.54719, "candidate": 0.54719}, {"period": 27, "group": "Northern", "scenario": "Feed degraded", "baseline": 0.72716, "candidate": 0.72716}, {"period": 28, "group": "Eastern", "scenario": "Typical", "baseline": 0.45152, "candidate": 0.03607}, {"period": 29, "group": "Midlands", "scenario": "Typical", "baseline": 0.18136, "candidate": 0.05587}, {"period": 30, "group": "Northern", "scenario": "Typical", "baseline": 0.20389, "candidate": 0.09621}, {"period": 31, "group": "Eastern", "scenario": "Weather stress", "baseline": 0.04968, "candidate": 0.1597}, {"period": 32, "group": "Midlands", "scenario": "Weather stress", "baseline": 0.27188, "candidate": 0.10555}, {"period": 33, "group": "Northern", "scenario": "Weather stress", "baseline": 1.00469, "candidate": 0.27107}, {"period": 34, "group": "Eastern", "scenario": "Feed degraded", "baseline": 0.48834, "candidate": 0.48834}, {"period": 35, "group": "Midlands", "scenario": "Feed degraded", "baseline": 0.5471, "candidate": 0.5471}, {"period": 36, "group": "Northern", "scenario": "Feed degraded", "baseline": 1.04246, "candidate": 1.04246}, {"period": 37, "group": "Eastern", "scenario": "Typical", "baseline": 0.17061, "candidate": 0.07827}, {"period": 38, "group": "Midlands", "scenario": "Typical", "baseline": 1.03822, "candidate": 0.29887}, {"period": 39, "group": "Northern", "scenario": "Typical", "baseline": 0.43338, "candidate": 0.03642}, {"period": 40, "group": "Eastern", "scenario": "Weather stress", "baseline": 0.05216, "candidate": 0.30333}, {"period": 41, "group": "Midlands", "scenario": "Weather stress", "baseline": 0.67307, "candidate": 0.02441}, {"period": 42, "group": "Northern", "scenario": "Weather stress", "baseline": 0.20665, "candidate": 0.12821}, {"period": 43, "group": "Eastern", "scenario": "Feed degraded", "baseline": 0.54414, "candidate": 0.54414}, {"period": 44, "group": "Midlands", "scenario": "Feed degraded", "baseline": 0.38634, "candidate": 0.38634}, {"period": 45, "group": "Northern", "scenario": "Feed degraded", "baseline": 0.508, "candidate": 0.508}, {"period": 46, "group": "Eastern", "scenario": "Typical", "baseline": 1.00935, "candidate": 0.30219}, {"period": 47, "group": "Midlands", "scenario": "Typical", "baseline": 0.22528, "candidate": 0.50146}, {"period": 48, "group": "Northern", "scenario": "Typical", "baseline": 0.727, "candidate": 0.01541}, {"period": 49, "group": "Eastern", "scenario": "Weather stress", "baseline": 0.36628, "candidate": 0.38988}, {"period": 50, "group": "Midlands", "scenario": "Weather stress", "baseline": 0.24598, "candidate": 0.26233}, {"period": 51, "group": "Northern", "scenario": "Weather stress", "baseline": 0.88707, "candidate": 0.14593}, {"period": 52, "group": "Eastern", "scenario": "Feed degraded", "baseline": 0.78547, "candidate": 0.78547}, {"period": 53, "group": "Midlands", "scenario": "Feed degraded", "baseline": 0.33733, "candidate": 0.33733}, {"period": 54, "group": "Northern", "scenario": "Feed degraded", "baseline": 0.82222, "candidate": 0.82222}, {"period": 55, "group": "Eastern", "scenario": "Typical", "baseline": 0.04453, "candidate": 0.07841}, {"period": 56, "group": "Midlands", "scenario": "Typical", "baseline": 0.82579, "candidate": 0.13853}, {"period": 57, "group": "Northern", "scenario": "Typical", "baseline": 1.0219, "candidate": 0.33964}, {"period": 58, "group": "Eastern", "scenario": "Weather stress", "baseline": 0.64673, "candidate": 0.23727}, {"period": 59, "group": "Midlands", "scenario": "Weather stress", "baseline": 0.55619, "candidate": 0.17663}, {"period": 60, "group": "Northern", "scenario": "Weather stress", "baseline": 0.10364, "candidate": 0.42363}, {"period": 61, "group": "Eastern", "scenario": "Feed degraded", "baseline": 0.01424, "candidate": 0.01424}, {"period": 62, "group": "Midlands", "scenario": "Feed degraded", "baseline": 0.69147, "candidate": 0.69147}, {"period": 63, "group": "Northern", "scenario": "Feed degraded", "baseline": 0.20293, "candidate": 0.20293}, {"period": 64, "group": "Eastern", "scenario": "Typical", "baseline": 0.14434, "candidate": 0.52738}, {"period": 65, "group": "Midlands", "scenario": "Typical", "baseline": 1.10186, "candidate": 0.44731}, {"period": 66, "group": "Northern", "scenario": "Typical", "baseline": 0.7911, "candidate": 0.38715}, {"period": 67, "group": "Eastern", "scenario": "Weather stress", "baseline": 1.3009, "candidate": 0.71691}, {"period": 68, "group": "Midlands", "scenario": "Weather stress", "baseline": 0.08668, "candidate": 0.3875}, {"period": 69, "group": "Northern", "scenario": "Weather stress", "baseline": 0.80913, "candidate": 0.11254}, {"period": 70, "group": "Eastern", "scenario": "Feed degraded", "baseline": 0.41716, "candidate": 0.41716}, {"period": 71, "group": "Midlands", "scenario": "Feed degraded", "baseline": 0.11, "candidate": 0.11}, {"period": 72, "group": "Northern", "scenario": "Feed degraded", "baseline": 0.58008, "candidate": 0.58008}, {"period": 73, "group": "Eastern", "scenario": "Typical", "baseline": 0.18014, "candidate": 0.06055}, {"period": 74, "group": "Midlands", "scenario": "Typical", "baseline": 0.67328, "candidate": 0.01736}, {"period": 75, "group": "Northern", "scenario": "Typical", "baseline": 0.3134, "candidate": 0.2633}, {"period": 76, "group": "Eastern", "scenario": "Weather stress", "baseline": 0.01102, "candidate": 0.07319}, {"period": 77, "group": "Midlands", "scenario": "Weather stress", "baseline": 0.41601, "candidate": 0.03305}, {"period": 78, "group": "Northern", "scenario": "Weather stress", "baseline": 0.49189, "candidate": 0.12542}, {"period": 79, "group": "Eastern", "scenario": "Feed degraded", "baseline": 0.30084, "candidate": 0.30084}, {"period": 80, "group": "Midlands", "scenario": "Feed degraded", "baseline": 0.40628, "candidate": 0.40628}, {"period": 81, "group": "Northern", "scenario": "Feed degraded", "baseline": 0.58446, "candidate": 0.58446}, {"period": 82, "group": "Eastern", "scenario": "Typical", "baseline": 0.47359, "candidate": 0.27468}, {"period": 83, "group": "Midlands", "scenario": "Typical", "baseline": 0.72228, "candidate": 0.37881}, {"period": 84, "group": "Northern", "scenario": "Typical", "baseline": 0.04176, "candidate": 0.60457}], "baseline_mean": 0.5306961904761904, "candidate_mean": 0.3401955952380952}]</script>
+<script>
+'use strict';
+const el = id => document.getElementById(id);
+const number = new Intl.NumberFormat('en-GB',{maximumFractionDigits:3});
+const fmt = value => Number.isFinite(value) ? number.format(value) : '—';
+let catalogue, selected, cases=[];
+function options(target, entries) {
+  target.replaceChildren(...entries.map(([value,label]) => new Option(label,value)));
+}
+function plot() {
+  const canvas=el('chart'), ctx=canvas.getContext('2d');
+  if (!ctx) return;
+  const w=canvas.clientWidth,h=canvas.clientHeight, scale=window.devicePixelRatio || 1;
+  canvas.width=w*scale; canvas.height=h*scale; ctx.scale(scale,scale);
+  if (!cases.length || w<65) return;
+  const colors=getComputedStyle(document.documentElement);
+  const yValues=cases.flatMap(row=>[row.baseline,row.candidate]);
+  const min=Math.min(0,...yValues), max=Math.max(...yValues,min+.001);
+  const x=i=>44+(w-56)*(cases.length===1 ? .5 : i/(cases.length-1));
+  const y=v=>h-22-(h-38)*(v-min)/(max-min);
+  ctx.font='12px system-ui';
+  for(let i=0;i<=4;i++){
+    const v=min+(max-min)*i/4;
+    ctx.strokeStyle=colors.getPropertyValue('--line'); ctx.beginPath();ctx.moveTo(44,y(v));ctx.lineTo(w-12,y(v));ctx.stroke();
+    ctx.fillStyle=colors.getPropertyValue('--sub');ctx.fillText(fmt(v),0,y(v)+4);
+  }
+  for(const [key,variable] of [['baseline','--base'],['candidate','--candidate']]){
+    ctx.strokeStyle=ctx.fillStyle=colors.getPropertyValue(variable);ctx.lineWidth=2;
+    ctx.beginPath();cases.forEach((row,i)=>i?ctx.lineTo(x(i),y(row[key])):ctx.moveTo(x(i),y(row[key])));ctx.stroke();
+    if(cases.length===1){ctx.beginPath();ctx.arc(x(0),y(cases[0][key]),4,0,Math.PI*2);ctx.fill();}
+  }
+}
+function render() {
+  const group=el('group').value, scenario=el('scenario').value;
+  cases=selected.cases.filter(row=>(!group||row.group===group)&&(!scenario||row.scenario===scenario));
+  const mean=key=>cases.length?cases.reduce((sum,row)=>sum+row[key],0)/cases.length:NaN;
+  const wins=cases.filter(row=>row.candidate<row.baseline-1e-8).length;
+  const losses=cases.filter(row=>row.candidate>row.baseline+1e-8).sort((a,b)=>(b.candidate-b.baseline)-(a.candidate-a.baseline));
+  el('baseline').textContent=fmt(mean('baseline'));el('candidate').textContent=fmt(mean('candidate'));
+  el('wins').textContent=cases.length?Math.round(100*wins/cases.length)+'%':'—';
+  el('count').textContent=cases.length+' replay cases';
+  el('status').textContent=cases.length?selected.provenance:'No cases match these filters. Choose another group or scenario.';
+  const worst=losses[0];
+  el('analysis').textContent=worst?`The candidate scored worse in ${losses.length} of ${cases.length} cases. The largest gap was ${fmt(worst.candidate-worst.baseline)} in case ${worst.period} (${worst.scenario}, ${worst.group}).`:cases.length?'The candidate had no higher scores in this selection. Check other scenarios to see where it loses.':'Change the filters to inspect results.';
+  el('download').disabled = !cases.length;
+  el('cases').replaceChildren(...(losses.length?losses:cases).slice(0,5).map(row=>{
+    const tr=document.createElement('tr');
+    for(const value of [row.period,row.group,row.scenario,fmt(row.baseline),fmt(row.candidate)]) tr.insertCell().textContent=value;
+    return tr;
+  }));
+  plot();
+}
+function setProject() {
+  selected=catalogue.find(row=>row.config.slug===el('project').value) || catalogue[0];
+  const c=selected.config;
+  for(const [id,value] of Object.entries({title:c.name,domain:c.domain,subtitle:c.subtitle,scope:c.note,units:c.units,'base-label':c.baseline,'base-legend':c.baseline,'candidate-label':c.candidate,'candidate-legend':c.candidate})) el(id).textContent=value;
+  el('repo').href='https://github.com/ChrishA-tech/'+c.slug;
+  options(el('group'),[['','All groups'],...[...new Set(selected.cases.map(row=>row.group))].map(value=>[value,value])]);
+  options(el('scenario'),[['','All scenarios'],...[...new Set(selected.cases.map(row=>row.scenario))].map(value=>[value,value])]);
+  render();
+}
+try {
+  catalogue=JSON.parse(el('data').textContent);
+  if(!Array.isArray(catalogue)||!catalogue.length||catalogue.some(item=>!item.config||!Array.isArray(item.cases))) throw Error('Invalid replay data');
+  options(el('project'),catalogue.map(row=>[row.config.slug,row.config.name]));
+  const requested=new URLSearchParams(location.search).get('project');
+  if(catalogue.some(row=>row.config.slug===requested)) el('project').value=requested;
+  el('interactive').classList.remove('hidden');
+  setProject();
+  el('project').addEventListener('change',setProject);
+  ['group','scenario'].forEach(id=>el(id).addEventListener('change',render));
+  window.addEventListener('resize',plot);
+  el('download').addEventListener('click',()=>{
+    const quote=value=>'"'+String(value).replaceAll('"','""')+'"';
+    const lines=cases.map(row=>[row.period,row.group,row.scenario,row.baseline,row.candidate,selected.provenance].map(quote).join(','));
+    const url=URL.createObjectURL(new Blob(['case,group,scenario,baseline_score,candidate_score,provenance\n'+lines.join('\n')],{type:'text/csv'}));
+    const link=document.createElement('a');link.href=url;link.download=selected.config.slug+'-replay.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
+} catch(error) {
+  el('interactive').classList.add('hidden');
+  el('failure').textContent='Replay data could not be loaded. Reload the page or check the repository for a fresh dashboard.';
+  el('failure').classList.remove('hidden');
+}
+</script>
+</body>
+</html>

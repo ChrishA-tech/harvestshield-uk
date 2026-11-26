@@ -64,3 +64,8 @@ Services:
 - `pgvector`: PostgreSQL 16 + pgvector on port `5432`
 - `mlflow`: MLflow tracking server backed by SQLite on port `5000`
 - `api`: FastAPI HarvestShield service on port `8000`
+
+
+## Interactive decision replay
+
+Explore [the dashboard](https://chrisha-tech.github.io/replay/?project=harvestshield-uk) or reproduce the [scenario benchmark and error analysis](replay/README.md). The bundled replay uses synthetic scenarios.
